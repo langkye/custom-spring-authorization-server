@@ -12,7 +12,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>_0.x.x.0-default-authorization-server</module>
-        <module>_0.x.x.1.response-failure-json</module>
+        <module>_0.x.x.1.response-success-json</module>
     </modules>
 
     <artifactId>_0.x.x</artifactId>
