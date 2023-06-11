@@ -1,0 +1,1 @@
+> build from https://github.com/spring-projects/spring-authorization-server[spring-authorization-server]

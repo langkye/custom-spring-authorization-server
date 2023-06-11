@@ -1,0 +1,1 @@
+> build from https://github.com/spring-projects/spring-authorization-server/blob/0.4.x/samples/default-authorizationserver/samples-default-authorizationserver.gradle[samples-default-authorizationserver]
