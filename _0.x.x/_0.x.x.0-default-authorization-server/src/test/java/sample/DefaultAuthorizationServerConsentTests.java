@@ -43,14 +43,14 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 /**
- * Consent page integration tests for the sample Authorization Server serving a custom Consent page.
+ * Consent screen integration tests for the sample Authorization Server.
  *
  * @author Dmitriy Dubson
  */
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
-public class CustomConsentAuthorizationServerTests {
+public class DefaultAuthorizationServerConsentTests {
 
 	@Autowired
 	private WebClient webClient;
@@ -81,7 +81,7 @@ public class CustomConsentAuthorizationServerTests {
 	@WithMockUser("user1")
 	public void whenUserConsentsToAllScopesThenReturnAuthorizationCode() throws IOException {
 		final HtmlPage consentPage = this.webClient.getPage(this.authorizationRequestUri);
-		assertThat(consentPage.getTitleText()).isEqualTo("Custom consent page - Consent required");
+		assertThat(consentPage.getTitleText()).isEqualTo("Consent required");
 
 		List<HtmlCheckBoxInput> scopes = new ArrayList<>();
 		consentPage.querySelectorAll("input[name='scope']").forEach(scope ->
@@ -111,7 +111,7 @@ public class CustomConsentAuthorizationServerTests {
 	@WithMockUser("user1")
 	public void whenUserCancelsConsentThenReturnAccessDeniedError() throws IOException {
 		final HtmlPage consentPage = this.webClient.getPage(this.authorizationRequestUri);
-		assertThat(consentPage.getTitleText()).isEqualTo("Custom consent page - Consent required");
+		assertThat(consentPage.getTitleText()).isEqualTo("Consent required");
 
 		DomElement cancelConsentButton = consentPage.querySelector("button[id='cancel-consent']");
 		this.webClient.getOptions().setRedirectEnabled(false);
