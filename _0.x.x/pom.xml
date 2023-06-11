@@ -13,6 +13,7 @@
     <modules>
         <module>_0.x.x.0-default-authorization-server</module>
         <module>_0.x.x.1.response-success-json</module>
+        <module>_0.x.x.2.response-failure-json</module>
     </modules>
 
     <artifactId>_0.x.x</artifactId>
