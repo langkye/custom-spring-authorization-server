@@ -1,0 +1,20 @@
+server:
+  port: 9000
+
+logging:
+  level:
+    root: INFO
+    org.springframework: debug
+#    org.springframework.web: INFO
+#    org.springframework.security: INFO
+#    org.springframework.security.oauth2: INFO
+#    org.springframework.boot.autoconfigure: DEBUG
+
+authorization:
+  jwt:
+    access-token-expire-time: 300000
+    header: Authorization
+    prefix: "Bearer "
+    refresh-token-expire-time: 2592000000
+    key: MD0rgsDaSEZcKyQJqIDrKiV62p+ZhRCJvwOfvLIoGUSTkKCKCDgQQs2RQ8K9N4o36WIcf92ALn+yAUHgIJFDzg==
+    refresh-key: S1YnkwxhpZsIyGeLkFuuRAGOzy2QsiQkIA/Hqyn39+mzFCK/V/uv/qUnMORRsy2TE1Z8MhYPwBxFYc41PJWf7g==
