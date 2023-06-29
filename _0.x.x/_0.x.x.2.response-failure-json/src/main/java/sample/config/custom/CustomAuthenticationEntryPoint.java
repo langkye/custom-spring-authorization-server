@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
-import org.springframework.security.authentication.*;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.oauth2.jwt.BadJwtException;
@@ -12,6 +15,7 @@ import org.springframework.security.oauth2.jwt.JwtValidationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
+import javax.security.auth.login.AccountExpiredException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,7 +44,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
         // BadCredentialsException
         if (authException instanceof BadCredentialsException) {
-            errorMessage = "凭据错误";
+            //errorMessage = "凭据错误";
+            errorMessage = authException.getMessage();
         }
         // 
         else if (authException instanceof UsernameNotFoundException) {
@@ -78,7 +83,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
                 if (message.contains("Invalid token does not contain resource id")) {
                     errorMessage = "未经授权的资源服务器";
                 } else if (message.contains("Full authentication is required to access this resource")) {
-                    errorMessage = "缺少验证信息";
+                    //errorMessage = "缺少验证信息";
+                    errorMessage = "访问令牌无效";
                 }
             }
         }

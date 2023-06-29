@@ -24,6 +24,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import sample.config.custom.CustomAuthenticationEntryPoint;
+import sample.config.custom.CustomAuthenticationFailureHandler;
 import sample.config.custom.CustomAuthenticationSuccessHandler;
 
 import javax.annotation.Resource;
@@ -38,6 +39,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class DefaultSecurityConfig {
 	@Resource private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 	@Resource private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+	@Resource private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 
 	// @formatter:off
 	@Bean
@@ -48,7 +50,7 @@ public class DefaultSecurityConfig {
 						authorizeRequests.anyRequest().authenticated()
 				)
 				.formLogin(withDefaults())
-				.formLogin().successHandler(customAuthenticationSuccessHandler)
+				.formLogin().successHandler(customAuthenticationSuccessHandler).failureHandler(customAuthenticationFailureHandler)
 		;
 		return http.build();
 	}
