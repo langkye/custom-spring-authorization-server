@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.core.env.Environment;
 import org.springframework.core.env.Profiles;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -36,14 +37,14 @@ import sample.config.handler.CustomAccessDeniedHandler;
 import sample.config.handler.CustomAuthenticationEntryPoint;
 import sample.config.handler.CustomAuthenticationFailureHandler;
 import sample.config.handler.CustomAuthenticationSuccessHandler;
-import sample.config.provider.pwd.PasswordAuthenticationProvider;
-import sample.config.provider.sms.SmsAuthenticationProvider;
 import sample.filter.JwtFilter;
 
 import javax.annotation.Resource;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -63,8 +64,7 @@ public class DefaultSecurityConfig {
 	@Resource private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 	@Resource private Environment environment;
 	@Resource private JwtFilter jwtFilter;
-	@Resource private SmsAuthenticationProvider smsAuthenticationProvider;
-	@Resource private PasswordAuthenticationProvider passwordAuthenticationProvider;
+	@Resource private Map<String, AuthenticationProvider> authenticationProviderMap;
 
 	// @formatter:off
 	@Bean
@@ -120,7 +120,8 @@ public class DefaultSecurityConfig {
 	
 	@Autowired
 	void configAuthenticationManager(AuthenticationManagerBuilder authenticationManagerBuilder) {
-		authenticationManagerBuilder.authenticationProvider(passwordAuthenticationProvider);
-		authenticationManagerBuilder.authenticationProvider(smsAuthenticationProvider);
+		if (Objects.nonNull(authenticationProviderMap) && !authenticationProviderMap.isEmpty()) {
+			authenticationProviderMap.forEach((providerName, provider) -> authenticationManagerBuilder.authenticationProvider(provider));
+		}
 	}
 }
