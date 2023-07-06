@@ -16,6 +16,7 @@
         <module>_0.x.x.2.response-failure-json</module>
         <module>_0.x.x.3.jwt-token</module>
         <module>_0.x.x.4.login-with-json</module>
+        <module>_0.x.x.5.multiple-authentication-provider</module>
     </modules>
 
     <artifactId>_0.x.x</artifactId>
