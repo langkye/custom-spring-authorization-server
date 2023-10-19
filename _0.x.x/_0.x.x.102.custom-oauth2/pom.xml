@@ -9,7 +9,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>custom-oauth2</artifactId>
+    <artifactId>_0.x.x.102.custom-oauth2</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -33,6 +33,10 @@
         <!--<dependency>-->
         <!--    <groupId>org.springframework.boot</groupId>-->
         <!--    <artifactId>spring-boot-starter-oauth2-client</artifactId>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--    <groupId>org.springframework.security</groupId>-->
+        <!--    <artifactId>spring-security-oauth2-client</artifactId>-->
         <!--</dependency>-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

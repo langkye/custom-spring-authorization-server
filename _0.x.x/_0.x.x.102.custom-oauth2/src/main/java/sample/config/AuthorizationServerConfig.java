@@ -19,6 +19,7 @@ import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -27,6 +28,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
@@ -41,9 +43,11 @@ import org.springframework.security.oauth2.server.authorization.client.JdbcRegis
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationEndpointConfigurer;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.web.OAuth2AuthorizationEndpointFilter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import sample.config.handler.*;
@@ -65,35 +69,37 @@ public class AuthorizationServerConfig {
 	@Resource private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 	@Resource private CustomAccessDeniedHandler customAccessDeniedHandler;
 	@Resource private JwtFilter jwtFilter;
+	@Autowired
+	private AuthenticationManager authenticationManager;
 
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-		http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
-				.oidc(Customizer.withDefaults());	// Enable OpenID Connect 1.0
+		//OAuth2AuthorizationEndpointFilter authorizationEndpointFilter = new OAuth2AuthorizationEndpointFilter(authenticationManager);
+		//authorizationEndpointFilter.setAuthenticationSuccessHandler(customAuthenticationSuccessHandler);
+		//authorizationEndpointFilter.setAuthenticationFailureHandler(customAuthenticationFailureHandler);
+		//AuthenticationManager sharedObject = http.getSharedObject(AuthenticationManager.class);
 
+		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+		OAuth2AuthorizationServerConfigurer configurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer.class);
+		configurer
+				.oidc(Customizer.withDefaults()) // Enable OpenID Connect 1.0
+				.authorizationEndpoint(authorizationEndpoint ->
+						authorizationEndpoint
+								//.authorizationRequestConverter(authorizationRequestConverter)
+								//.authorizationRequestConverters(authorizationRequestConvertersConsumer)
+								//.authenticationProvider(authenticationProvider)
+								//.authenticationProviders(authenticationProvidersConsumer)
+								.authorizationResponseHandler(customAuthenticationSuccessHandler)
+								.errorResponseHandler(customAuthenticationFailureHandler)
+								//.consentPage("/oauth2/v1/authorize")
+				)
+		;
+		//OAuth2AuthorizationEndpointConfigurer configurer = null;
+		//http.getConfigurer(OAuth2AuthorizationEndpointConfigurer.class);
+		
 		// @formatter:off
 		http
-				//.oauth2Login(oauth2 -> {
-				//		//oauth2
-				//		//.failureHandler(customAuthenticationFailureHandler)
-				//		//.successHandler(customAuthenticationSuccessHandler)
-				//		//.authorizationEndpoint(authorization -> {
-				//		//	//logger.error(">>>>>>>>>>>authorizationEndpoint");
-				//		//})
-				//		//.redirectionEndpoint(redirection -> {
-				//		//	//redirection.baseUri("/aaa/*");
-				//		//	//logger.error(">>>>>>>>>>>redirectionEndpoint");
-				//		//})
-				//		//.tokenEndpoint(token -> {
-				//		//	//logger.error(">>>>>>>>>>>tokenEndpoint");
-				//		//})
-				//		//.userInfoEndpoint(userInfo -> {
-				//		//	//logger.error(">>>>>>>>>>>userInfoEndpoint");
-				//		//})
-				//		;
-				//})
 				.exceptionHandling(exceptions ->
 						exceptions
 								.authenticationEntryPoint(customAuthenticationEntryPoint)
@@ -114,7 +120,7 @@ public class AuthorizationServerConfig {
 		// @formatter:on
 		return http.build();
 	}
-
+	
 	// @formatter:off
 	@Bean
 	public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate) {

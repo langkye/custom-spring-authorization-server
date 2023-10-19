@@ -73,7 +73,8 @@ public class DefaultSecurityConfig {
 	SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 		http
 				// 禁用session
-				.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				//.sessionManagement(sessionManagement -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+				.sessionManagement(AbstractHttpConfigurer::disable)
 				// 异常处理
 				.exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(customAccessDeniedHandler))
 				// 配置跨域
@@ -91,7 +92,7 @@ public class DefaultSecurityConfig {
 				.formLogin(AbstractHttpConfigurer::disable)
 				.logout(AbstractHttpConfigurer::disable)
 				// 禁用csrf
-				.csrf().disable()
+				.csrf(AbstractHttpConfigurer::disable)
 				// token校验
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 				// 应用自定义登录处理逻辑
@@ -153,11 +154,12 @@ public class DefaultSecurityConfig {
 			authenticationProviderMap.forEach((providerName, provider) -> authenticationManagerBuilder.authenticationProvider(provider));
 		}
 	}
-	@Bean
-	//@Lazy
-	//@DependsOn("defaultSecurityConfig")
-	public OAuth2TokenGenerator<? extends OAuth2Token> oAuth2TokenGenerator(HttpSecurity http) {
-		return OAuth2ConfigurerUtils.getTokenGenerator(http);
-	}
+	
+	//@Bean
+	////@Lazy
+	////@DependsOn("defaultSecurityConfig")
+	//public OAuth2TokenGenerator<? extends OAuth2Token> oAuth2TokenGenerator(HttpSecurity http) {
+	//	return OAuth2ConfigurerUtils.getTokenGenerator(http);
+	//}
 
 }
