@@ -1,7 +1,5 @@
-package sample.config.provider.pwd;
+package sample.config.provider.sms;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -18,41 +16,49 @@ import java.util.Objects;
  * @author langkye
  * @since 1.0.0.RELEASE
  */
-@JsonTypeInfo(include = JsonTypeInfo.As.WRAPPER_OBJECT, use = JsonTypeInfo.Id.NAME)
-@JsonTypeName("PasswordAuthenticationToken")
-public class PasswordAuthenticationToken extends AbstractAuthenticationToken implements ITokenProvider {
+public class SmsAuthenticationToken extends AbstractAuthenticationToken implements ITokenProvider {
     private Object credentials;
     private Object principal;
     private Object details;
     private Collection<GrantedAuthority> authorities;
-
     private boolean authenticated = false;
+    private String name;
 
-    public PasswordAuthenticationToken() {
+    @Override
+    public String getName() {
+        name = super.getName();
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public SmsAuthenticationToken() {
         super(AuthorityUtils.NO_AUTHORITIES);
     }
 
-    public static PasswordAuthenticationToken authenticated(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities, Object details) {
-        return new PasswordAuthenticationToken(principal, credentials, authorities, details);
+    public static SmsAuthenticationToken authenticated(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
+        return new SmsAuthenticationToken(principal, credentials, authorities);
     }
 
-    public static PasswordAuthenticationToken authenticated(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
-        return new PasswordAuthenticationToken(principal, credentials, authorities);
+    public static SmsAuthenticationToken authenticated(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities, Object details) {
+        return new SmsAuthenticationToken(principal, credentials, authorities, details);
     }
 
-    public static PasswordAuthenticationToken unauthenticated(Object principal, Object credentials ) {
-        return new PasswordAuthenticationToken(principal, credentials);
+    public static SmsAuthenticationToken unauthenticated(Object principal, Object credentials ) {
+        return new SmsAuthenticationToken(principal, credentials);
     }
 
-    public PasswordAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
+    public SmsAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
         super(Objects.isNull(authorities) ? AuthorityUtils.NO_AUTHORITIES : new ArrayList<>(authorities));
-        this.credentials = credentials;
         this.principal = principal;
+        this.credentials = credentials;
         this.authorities = Objects.isNull(authorities) ? AuthorityUtils.NO_AUTHORITIES : new ArrayList<>(authorities);
         this.authenticated = true;
     }
 
-    public PasswordAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities, Object details) {
+    public SmsAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities, Object details) {
         super(Objects.isNull(authorities) ? AuthorityUtils.NO_AUTHORITIES : new ArrayList<>(authorities));
         this.credentials = credentials;
         this.principal = principal;
@@ -61,22 +67,12 @@ public class PasswordAuthenticationToken extends AbstractAuthenticationToken imp
         this.details = details;
     }
 
-    public PasswordAuthenticationToken(Object principal, Object credentials) {
+    public SmsAuthenticationToken(Object principal, Object credentials) {
         super(AuthorityUtils.NO_AUTHORITIES);
-        this.credentials = credentials;
         this.principal = principal;
-        this.authorities = AuthorityUtils.NO_AUTHORITIES;
+        this.credentials = credentials;
         this.authenticated = false;
-    }
-
-    @Override
-    public Object getDetails() {
-        return this.details;
-    }
-
-    @Override
-    public void setDetails(Object details) {
-        this.details = details;
+        this.authorities = AuthorityUtils.NO_AUTHORITIES;
     }
 
     @Override
@@ -84,7 +80,6 @@ public class PasswordAuthenticationToken extends AbstractAuthenticationToken imp
         return credentials;
     }
 
-    @Override
     public void setCredentials(Object credentials) {
         this.credentials = credentials;
     }
@@ -94,17 +89,25 @@ public class PasswordAuthenticationToken extends AbstractAuthenticationToken imp
         return principal;
     }
 
-    @Override
     public void setPrincipal(Object principal) {
         this.principal = principal;
     }
 
     @Override
-    public Collection<GrantedAuthority> getAuthorities() {
-        return (Collection<GrantedAuthority>) authorities;
+    public Object getDetails() {
+        return details;
     }
 
     @Override
+    public void setDetails(Object details) {
+        this.details = details;
+    }
+
+    @Override
+    public Collection<GrantedAuthority> getAuthorities() {
+        return authorities;
+    }
+
     public void setAuthorities(Collection<GrantedAuthority> authorities) {
         this.authorities = authorities;
     }
@@ -121,16 +124,16 @@ public class PasswordAuthenticationToken extends AbstractAuthenticationToken imp
 
     @Override
     public boolean supports(@NonNull Number loginType) {
-        return Objects.equals(AuthType.password.getType(), loginType);
+        return Objects.equals(AuthType.sms.getType(), loginType);
     }
 
     @Override
     public @NonNull AuthType supports() {
-        return AuthType.password;
+        return AuthType.sms;
     }
-
+    
     @Override
     public @NonNull ITokenProvider parser(@NonNull IAuthRequest request) {
-        return PasswordAuthenticationToken.unauthenticated(request, request);
+        return SmsAuthenticationToken.unauthenticated(request, request);
     }
 }

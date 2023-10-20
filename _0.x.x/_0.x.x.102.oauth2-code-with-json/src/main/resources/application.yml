@@ -1,0 +1,28 @@
+server:
+  port: 9001
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: TRACE
+    org.springframework: DEBUG
+    #org.springframework.web: INFO
+    org.springframework.beans.factory: INFO
+    org.springframework.context.annotation.ClassPathBeanDefinitionScanner: INFO
+    #org.springframework.security: INFO
+    org.springframework.security.jackson2.SecurityJackson2Modules: INFO
+    #org.springframework.security.oauth2: INFO
+    #org.springframework.boot.autoconfigure: DEBUG
+    org.springframework.boot.SpringApplication: INFO
+    org.springframework.jdbc.datasource.init: INFO
+    org.springframework.context.support.DefaultLifecycleProcessor: INFO
+    org.springframework.boot.autoconfigure.logging: INFO
+
+authorization:
+  jwt:
+    access-token-expire-time: 300000
+    header: Authorization
+    prefix: "Bearer "
+    refresh-token-expire-time: 2592000000
+    key: MD0rgsDaSEZcKyQJqIDrKiV62p+ZhRCJvwOfvLIoGUSTkKCKCDgQQs2RQ8K9N4o36WIcf92ALn+yAUHgIJFDzg==
+    refresh-key: S1YnkwxhpZsIyGeLkFuuRAGOzy2QsiQkIA/Hqyn39+mzFCK/V/uv/qUnMORRsy2TE1Z8MhYPwBxFYc41PJWf7g==

@@ -9,7 +9,7 @@
         <version>1.0.0</version>
     </parent>
 
-    <artifactId>_0.x.x.102.custom-oauth2</artifactId>
+    <artifactId>_0.x.x.102.oauth2-code-with-json</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -111,6 +111,12 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>2.13.5</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 
