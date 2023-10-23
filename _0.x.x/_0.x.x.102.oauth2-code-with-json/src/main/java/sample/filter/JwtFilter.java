@@ -4,7 +4,6 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -97,6 +96,10 @@ public class JwtFilter extends OncePerRequestFilter {
     private void setupSpringAuthentication(Claims authoritiesClaims, Claims loginTypeClaims) {
         Collection<?> authoritiesRawList = CollectionUtil.convertObjectToList(authoritiesClaims.get("authorities"));
         Object loginTypeNumber = loginTypeClaims.get("loginType");
+        String name = loginTypeClaims.get("name", String.class);
+        String username = loginTypeClaims.get("username", String.class);
+        String telephone = loginTypeClaims.get("telephone", String.class);
+        
         AuthType loginType = AuthType.of((Number) loginTypeNumber);
         
         List<GrantedAuthority> authorities = authoritiesRawList.stream()
@@ -106,6 +109,10 @@ public class JwtFilter extends OncePerRequestFilter {
 
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setLoginType((Number) loginTypeNumber);
+        loginRequest.setName(name);
+        loginRequest.setUsername(username);
+        loginRequest.setTelephone(telephone);
+        // fixme: 转换为正确的token authentication
         ITokenProvider authentication = loginType.getFunction().apply(loginRequest);
         authentication.setPrincipal(authoritiesClaims.getSubject());
         authentication.setPrincipal(loginRequest);

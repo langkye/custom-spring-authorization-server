@@ -42,10 +42,7 @@ public class PasswordAuthenticationFilter extends AbstractAuthenticationProcessi
                             username,
                             password);
             SecurityContextHolder.getContext().setAuthentication(unauthenticatedToken);
-            //return unauthenticatedToken;
-
-            // Allow subclasses to set the "details" property
-            //setDetails(request, authRequest);
+            
             return this.getAuthenticationManager().authenticate(unauthenticatedToken);
         } catch (IOException e) {
             log.error("", e);

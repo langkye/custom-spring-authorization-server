@@ -7,6 +7,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import sample.config.provider.AuthType;
 import sample.config.provider.IAuthRequest;
 import sample.config.provider.ITokenProvider;
+import sample.config.provider.pwd.AbstractCustomAuthenticationToken;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,7 +17,7 @@ import java.util.Objects;
  * @author langkye
  * @since 1.0.0.RELEASE
  */
-public class SmsAuthenticationToken extends AbstractAuthenticationToken implements ITokenProvider {
+public class SmsAuthenticationToken extends AbstractCustomAuthenticationToken implements ITokenProvider {
     private Object credentials;
     private Object principal;
     private Object details;

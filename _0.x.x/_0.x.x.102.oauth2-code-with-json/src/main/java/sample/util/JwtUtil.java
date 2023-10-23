@@ -73,6 +73,8 @@ public class JwtUtil {
                     .map(GrantedAuthority::getAuthority)
                     .collect(Collectors.toList()))
                 .claim("loginType", ((UserVo)userDetails).getLoginType())
+                .claim("username", userDetails.getUsername())
+                .claim("telephone", ((UserVo)userDetails).getTelephone())
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + timeToExpire))
             .signWith(signKey, SignatureAlgorithm.HS512).compact();

@@ -20,7 +20,7 @@ logging:
 
 authorization:
   jwt:
-    access-token-expire-time: 300000
+    access-token-expire-time: 30000000
     header: Authorization
     prefix: "Bearer "
     refresh-token-expire-time: 2592000000

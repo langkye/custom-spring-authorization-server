@@ -6,4 +6,6 @@ package sample.config.provider;
  */
 public interface IAuthRequest {
     Number getAuthType();
+
+    String getName();
 }
