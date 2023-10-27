@@ -38,7 +38,9 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import sample.jose.Jwks;
+import sample.property.AuthorizationProperties;
 
+import javax.annotation.Resource;
 import java.util.UUID;
 
 /**
@@ -48,6 +50,8 @@ import java.util.UUID;
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SecurityConfiguration {
+    @Resource private AuthorizationProperties authorizationProperties;
+    
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
@@ -138,9 +142,11 @@ public class SecurityConfiguration {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:9000")
-                .jwkSetEndpoint("/.well-known/jwks.json")
-                .oidcUserInfoEndpoint("/userinfo")
+                .issuer(authorizationProperties.getServer().getIssuer())
+                .jwkSetEndpoint(authorizationProperties.getServer().getJwkSetEndpoint())
+                .oidcUserInfoEndpoint(authorizationProperties.getServer().getOidcUserInfoEndpoint())
+                .authorizationEndpoint(authorizationProperties.getServer().getAuthorizationEndpoint())
+                .tokenEndpoint(authorizationProperties.getServer().getTokenEndpoint())
                 .build();
     }
 

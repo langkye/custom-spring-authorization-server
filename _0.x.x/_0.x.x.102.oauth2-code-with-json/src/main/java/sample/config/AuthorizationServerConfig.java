@@ -34,6 +34,7 @@ import org.springframework.security.web.authentication.preauth.AbstractPreAuthen
 import sample.config.handler.*;
 import sample.config.provider.oauth2.CustomOAuth2AuthorizationEndpointFilter;
 import sample.filter.JwtFilter;
+import sample.property.AuthorizationProperties;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -52,15 +53,21 @@ public class AuthorizationServerConfig {
 	@Resource private CustomAccessDeniedHandler customAccessDeniedHandler;
 	@Resource private JwtFilter jwtFilter;
 	@Resource private AuthenticationManager authenticationManager;
+	@Resource private AuthorizationProperties authorizationProperties;
 
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
-
 		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 		OAuth2AuthorizationServerConfigurer configurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer.class);
 		configurer
-				.oidc(Customizer.withDefaults()) // Enable OpenID Connect 1.0
+				.oidc(oidc ->
+						oidc
+								.providerConfigurationEndpoint(providerConfigurationEndpoint ->
+										providerConfigurationEndpoint.providerConfigurationCustomizer(providerConfiguration -> {})
+								)
+								.userInfoEndpoint(userInfoEndpoint -> {})
+				) // Enable OpenID Connect 1.0
 				.authorizationEndpoint(authorizationEndpoint -> 
 						authorizationEndpoint
 								//.authorizationRequestConverter(customAuthorizationRequestConverter)
@@ -80,14 +87,14 @@ public class AuthorizationServerConfig {
 				.exceptionHandling(exceptions ->
 						exceptions.authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(customAccessDeniedHandler)
 				)
+				//.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
 				.oauth2ResourceServer((oauth2) -> oauth2
 						.jwt(Customizer.withDefaults())
 						.withObjectPostProcessor(new BearerTokenAuthenticationFailureHandlerObjectPostProcessor())
 				)
-				//.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
 				// 禁用csrf
 				.csrf().disable()
-				.addFilterBefore(new CustomOAuth2AuthorizationEndpointFilter(authenticationManager)
+				.addFilterBefore(new CustomOAuth2AuthorizationEndpointFilter(authenticationManager, authorizationProperties.getServer().getAuthorizationEndpoint())
 								.withAuthenticationSuccessHandler(customAuthenticationSuccessHandler)
 								.withAuthenticationFailureHandler(customAuthenticationFailureHandler)
 						, AbstractPreAuthenticatedProcessingFilter.class)
@@ -97,7 +104,6 @@ public class AuthorizationServerConfig {
 				.apply(new CustomAuthenticationFilterConfigurer<>()).successHandler(customAuthenticationSuccessHandler).failureHandler(customAuthenticationFailureHandler)
 		;
 		// @formatter:on
-		//http.getConfigurer(OAuth2AuthorizationEndpointConfigurer.class);
 
 		http.build();
 

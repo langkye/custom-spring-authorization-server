@@ -26,12 +26,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.oauth2.core.OAuth2Token;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenGenerator;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -40,7 +37,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import sample.config.handler.*;
 import sample.filter.JwtFilter;
-import sample.util.OAuth2ConfigurerUtils;
+import sample.property.AuthorizationProperties;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
@@ -64,6 +61,7 @@ public class DefaultSecurityConfig {
 	@Resource private CustomAccessDeniedHandler customAccessDeniedHandler;
 	@Resource private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 	@Resource private Map<String, AuthenticationProvider> authenticationProviderMap;
+	@Resource private AuthorizationProperties authorizationProperties;
 	@Resource private Environment environment;
 	@Resource private JwtFilter jwtFilter;
 
@@ -84,7 +82,7 @@ public class DefaultSecurityConfig {
 				//.antMatchers("/oauth2/authorize", "/oauth2/token")  // 将 JwtFilter 应用于这些端点
 				//.and()
 				.authorizeRequests(authorizeRequests -> authorizeRequests
-						.mvcMatchers("/error", "/api/authentication/login", "/login").permitAll()
+						.mvcMatchers(authorizationProperties.getSecurity().getPermitUri().toArray(new String[]{})).permitAll()
 						//.antMatchers("/oauth2/authorize", "/oauth2/token").authenticated()
 						.anyRequest().authenticated())
 				// 禁用表单登录
