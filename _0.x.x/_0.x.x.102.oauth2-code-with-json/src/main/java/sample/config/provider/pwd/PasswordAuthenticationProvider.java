@@ -60,7 +60,7 @@ public class PasswordAuthenticationProvider implements AuthenticationProvider {
         // load user details
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
         if (Objects.isNull(userDetails)) {
-            throw new UsernameNotFoundException("username not exists");
+            throw new UsernameNotFoundException("Username or password is incorrect");
         }
         
         // check credentials

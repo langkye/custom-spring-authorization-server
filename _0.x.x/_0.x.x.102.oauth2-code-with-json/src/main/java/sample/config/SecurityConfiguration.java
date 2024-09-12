@@ -1,27 +1,28 @@
 package sample.config;
 
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.security.authentication.AuthenticationEventPublisher;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.DefaultAuthenticationEventPublisher;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.jackson2.CoreJackson2Module;
+import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -35,12 +36,14 @@ import org.springframework.security.oauth2.server.authorization.client.JdbcRegis
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import sample.jose.Jwks;
 import sample.property.AuthorizationProperties;
 
 import javax.annotation.Resource;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -50,6 +53,7 @@ import java.util.UUID;
 @Configuration
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class SecurityConfiguration {
+    private final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
     @Resource private AuthorizationProperties authorizationProperties;
     
     @Bean
@@ -85,7 +89,8 @@ public class SecurityConfiguration {
 
     private void handleOAuth2AuthenticationException(OAuth2AuthenticationException exception) {
     	// 在这里添加你的处理逻辑，例如记录错误或通知用户
-    	exception.printStackTrace();
+        logger.info("authenticationEventPublisher -- handleOAuth2AuthenticationException");
+    	//exception.printStackTrace();
     }
 
 
@@ -112,14 +117,33 @@ public class SecurityConfiguration {
 
         // Save registered client in db as if in-memory
         JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
-        registeredClientRepository.save(registeredClient);
+        //registeredClientRepository.save(registeredClient);
         return registeredClientRepository;
     }
     // @formatter:on
 
     @Bean
     public OAuth2AuthorizationService authorizationService(JdbcTemplate jdbcTemplate, RegisteredClientRepository registeredClientRepository) {
-        return new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
+        JdbcOAuth2AuthorizationService authorizationService = new JdbcOAuth2AuthorizationService(jdbcTemplate, registeredClientRepository);
+        /*
+        JdbcOAuth2AuthorizationService.OAuth2AuthorizationRowMapper rowMapper = new JdbcOAuth2AuthorizationService.OAuth2AuthorizationRowMapper(registeredClientRepository);
+        JdbcOAuth2AuthorizationService.OAuth2AuthorizationParametersMapper oAuth2AuthorizationParametersMapper = new JdbcOAuth2AuthorizationService.OAuth2AuthorizationParametersMapper();
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ClassLoader classLoader = JdbcOAuth2AuthorizationService.class.getClassLoader();
+        List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
+        objectMapper.registerModules(securityModules);
+        objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());
+        //objectMapper.addMixIn(SmsAuthenticationToken.class, SmsAuthenticationTokenMixin.class);
+        objectMapper.registerModule(new CoreJackson2Module()); // <--
+        
+        rowMapper.setObjectMapper(objectMapper);
+        oAuth2AuthorizationParametersMapper.setObjectMapper(objectMapper);
+        
+        authorizationService.setAuthorizationRowMapper(rowMapper);
+        authorizationService.setAuthorizationParametersMapper(oAuth2AuthorizationParametersMapper);
+        */
+        return authorizationService;
     }
 
     @Bean
@@ -150,18 +174,18 @@ public class SecurityConfiguration {
                 .build();
     }
 
-    @Bean
-    public EmbeddedDatabase embeddedDatabase() {
-        // @formatter:off
-        return new EmbeddedDatabaseBuilder()
-                .generateUniqueName(true)
-                .setType(EmbeddedDatabaseType.H2)
-                .setScriptEncoding("UTF-8")
-                .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql")
-                .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql")
-                .addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
-                .build();
-        // @formatter:on
-    }
+    //@Bean
+    //public EmbeddedDatabase embeddedDatabase() {
+    //    // @formatter:off
+    //    return new EmbeddedDatabaseBuilder()
+    //            .generateUniqueName(true)
+    //            .setType(EmbeddedDatabaseType.H2)
+    //            .setScriptEncoding("UTF-8")
+    //            .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql")
+    //            .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql")
+    //            .addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
+    //            .build();
+    //    // @formatter:on
+    //}
 
 }

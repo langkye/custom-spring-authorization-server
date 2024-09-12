@@ -1,7 +1,8 @@
 package sample.config.provider.sms;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.lang.NonNull;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import sample.config.provider.AuthType;
@@ -17,6 +18,16 @@ import java.util.Objects;
  * @author langkye
  * @since 1.0.0.RELEASE
  */
+@JsonTypeInfo(
+        //use = JsonTypeInfo.Id.NAME,
+        use = JsonTypeInfo.Id.CLASS,
+        include = JsonTypeInfo.As.PROPERTY,
+        //property = "type"
+        property = "@class"
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = SmsAuthenticationToken.class, name = "smsAuthenticationToken")
+})
 public class SmsAuthenticationToken extends AbstractCustomAuthenticationToken implements ITokenProvider {
     private Object credentials;
     private Object principal;
@@ -27,6 +38,7 @@ public class SmsAuthenticationToken extends AbstractCustomAuthenticationToken im
 
     @Override
     public String getName() {
+        if (Objects.isNull(name))
         name = super.getName();
         return name;
     }

@@ -1,5 +1,6 @@
 package sample.config.provider.oauth2;
 
+import com.devskiller.friendly_id.FriendlyId;
 import org.springframework.lang.Nullable;
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
 import org.springframework.security.crypto.keygen.StringKeyGenerator;
@@ -28,7 +29,8 @@ public class CustomOAuth2AuthorizationCodeGenerator implements OAuth2TokenGenera
         }
         Instant issuedAt = Instant.now();
         Instant expiresAt = issuedAt.plus(context.getRegisteredClient().getTokenSettings().getAuthorizationCodeTimeToLive());
-        return new OAuth2AuthorizationCode(this.authorizationCodeGenerator.generateKey(), issuedAt, expiresAt);
+        //return new OAuth2AuthorizationCode(this.authorizationCodeGenerator.generateKey(), issuedAt, expiresAt);
+        return new OAuth2AuthorizationCode(FriendlyId.createFriendlyId(), issuedAt, expiresAt);
     }
 
 }

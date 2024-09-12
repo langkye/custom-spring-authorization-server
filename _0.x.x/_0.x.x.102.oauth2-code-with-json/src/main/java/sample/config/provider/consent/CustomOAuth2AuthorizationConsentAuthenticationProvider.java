@@ -241,8 +241,13 @@ public final class CustomOAuth2AuthorizationConsentAuthenticationProvider implem
 		}
 
 		return new OAuth2AuthorizationCodeRequestAuthenticationToken(
-				authorizationRequest.getAuthorizationUri(), registeredClient.getClientId(), principal, authorizationCode,
-				redirectUri, authorizationRequest.getState(), authorizedScopes);
+				authorizationRequest.getAuthorizationUri()
+				, registeredClient.getClientId()
+				, principal
+				, authorizationCode
+				, redirectUri
+				, authorizationRequest.getState()
+				, authorizedScopes);
 	}
 
 	@Override

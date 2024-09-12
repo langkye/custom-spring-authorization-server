@@ -7,6 +7,8 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationDetailsSource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationResponse;
@@ -37,6 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -117,6 +120,13 @@ public class CustomOAuth2AuthorizationEndpointFilter extends OncePerRequestFilte
         }
 
         try {
+            Authentication securityContext = SecurityContextHolder.getContext().getAuthentication();
+            if (Objects.isNull(securityContext)) {
+                throw new OAuth2AuthenticationException(new OAuth2Error("Did not authenticate"
+                        , "Did not authenticate"
+                        , authorizationEndpointMatcher.toString()), "Did not authenticate");
+            }
+            
             Authentication authentication = this.authenticationConverter.convert(request);
             if (authentication instanceof AbstractAuthenticationToken) {
                 ((AbstractAuthenticationToken) authentication)
@@ -125,8 +135,12 @@ public class CustomOAuth2AuthorizationEndpointFilter extends OncePerRequestFilte
             Authentication authenticationResult = this.authenticationManager.authenticate(authentication);
 
             if (!authenticationResult.isAuthenticated()) {
-                filterChain.doFilter(request, response);
-                return;
+                //filterChain.doFilter(request, response);
+                //return;
+                //throw new OAuth2AuthenticationException("Bearer token is malformed");
+                throw new OAuth2AuthenticationException(new OAuth2Error("Did not authenticate"
+                        , "Did not authenticate"
+                        , authorizationEndpointMatcher.toString()), "Did not authenticate");
             }
 
             if (authenticationResult instanceof OAuth2AuthorizationConsentAuthenticationToken) {
@@ -145,9 +159,9 @@ public class CustomOAuth2AuthorizationEndpointFilter extends OncePerRequestFilte
             this.authenticationSuccessHandler.onAuthenticationSuccess(
                     request, response, authenticationResult);
 
-        } catch (OAuth2AuthenticationException ex) {
-            if (this.logger.isTraceEnabled()) {
-                this.logger.trace(LogMessage.format("Authorization request failed: %s", ex.getError()), ex);
+        } catch (AuthenticationException ex) {
+            if (this.logger.isTraceEnabled() && ex instanceof OAuth2AuthenticationException) {
+                this.logger.trace(LogMessage.format("Authorization request failed: %s", ((OAuth2AuthenticationException)ex).getError()), ex);
             }
             this.authenticationFailureHandler.onAuthenticationFailure(request, response, ex);
         }

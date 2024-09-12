@@ -18,6 +18,7 @@
         <module>_0.x.x.4.login-with-json</module>
         <module>_0.x.x.5.multiple-authentication-provider</module>
         <module>_0.x.x.100.login_with_default_oauth</module>
+        <module>_0.x.x.101.multiple-authentication-provider-oauth</module>
         <module>_0.x.x.102.oauth2-code-with-json</module>
     </modules>
 
@@ -28,7 +29,8 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <spring-boot.version>2.7.6</spring-boot.version>
-        <spring-authorization-server>0.4.3</spring-authorization-server>
+        <!--<spring-authorization-server>0.4.3</spring-authorization-server>-->
+        <spring-authorization-server>0.4.5</spring-authorization-server>
         <jjwt.version>0.11.5</jjwt.version>
     </properties>
 

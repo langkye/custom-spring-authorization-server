@@ -23,4 +23,6 @@ public interface ITokenProvider extends Authentication, CredentialsContainer {
     void setCredentials(Object o);
 
     void setAuthorities(Collection<GrantedAuthority> authorities);
+
+    void setDetails(Object details);
 }

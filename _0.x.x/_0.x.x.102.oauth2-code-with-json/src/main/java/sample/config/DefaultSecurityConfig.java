@@ -102,7 +102,7 @@ public class DefaultSecurityConfig {
 	// @formatter:on
 
 	// @formatter:off
-	@Bean
+	//@Bean
 	UserDetailsService users() {
 		UserDetails user = User.withDefaultPasswordEncoder()
 				.username("user")

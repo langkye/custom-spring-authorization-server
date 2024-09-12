@@ -10,12 +10,14 @@ import org.springframework.security.authentication.InternalAuthenticationService
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import sample.config.handler.CustomAuthenticationFailureHandler;
 import sample.config.provider.ITokenProvider;
 import sample.config.provider.AuthType;
 import sample.domain.user.model.request.LoginRequest;
+import sample.domain.user.service.IUserService;
 import sample.property.AuthorizationProperties;
 import sample.util.CollectionUtil;
 import sample.util.JwtUtil;
@@ -44,6 +46,7 @@ public class JwtFilter extends OncePerRequestFilter {
     @Resource private AuthorizationProperties authorizationProperties;
     @Resource private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
     @Resource private JwtUtil jwtUtil;
+    @Resource private IUserService userService;
     
     /**
      * Same contract as for {@code doFilter}, but guaranteed to be
@@ -59,16 +62,20 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
+            boolean authenticate = false;
             if (this.checkToken(request)) {
                 Optional<Claims> optional = this.validateToken(request);
                         //.filter(claims -> Objects.nonNull(claims.get("authorities")));
                 Optional<Claims> authoritiesOptional = optional.filter(claims -> Objects.nonNull(claims.get("authorities")));
                 Optional<Claims> loginTypeOptional = optional.filter(claims -> Objects.nonNull(claims.get("loginType")));
                 if (authoritiesOptional.isPresent() && loginTypeOptional.isPresent()) {
+                    authenticate = true;
                     this.setupSpringAuthentication(optional.get(), loginTypeOptional.get());
-                } else {
-                    SecurityContextHolder.clearContext();
                 }
+            }
+            
+            if (!authenticate) {
+                SecurityContextHolder.clearContext();
             }
             filterChain.doFilter(request, response);
         } catch (Exception e) {
@@ -107,18 +114,23 @@ public class JwtFilter extends OncePerRequestFilter {
                 .map(SimpleGrantedAuthority::new)
                 .collect(toList());
 
+        UserDetails userDetails = userService.loadUserByUsername(username);
+        // 查询完成后更新session???
+        log.warn("查询完成后更新session???");
+
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setLoginType((Number) loginTypeNumber);
         loginRequest.setName(name);
         loginRequest.setUsername(username);
         loginRequest.setTelephone(telephone);
-        // fixme: 转换为正确的token authentication
+        
         ITokenProvider authentication = loginType.getFunction().apply(loginRequest);
         authentication.setPrincipal(authoritiesClaims.getSubject());
         authentication.setPrincipal(loginRequest);
         authentication.setCredentials(null);
         authentication.setAuthorities(authorities);
         authentication.setAuthenticated(true);
+        authentication.setDetails(userDetails);
         
         SecurityContextHolder.getContext().setAuthentication(authentication);
     }

@@ -61,21 +61,19 @@ public class SmsAuthenticationProvider implements AuthenticationProvider {
         }
         
         // check credentials
+        logger.error("TODO: check sms code: {}", smsCode);
         String cacheSmsCode = smsCode; // todo
         if (!(Objects.nonNull(smsCode) && Objects.equals(smsCode, cacheSmsCode))) {
             throw new BadCredentialsException("Bad sms code");
         }
         
         // success
-        SmsAuthenticationToken result = SmsAuthenticationToken.authenticated(
+        return SmsAuthenticationToken.authenticated(
                 authentication.getPrincipal()
-                ,authentication.getCredentials()
+                , authentication.getCredentials()
                 , this.authoritiesMapper.mapAuthorities(userDetails.getAuthorities())
-                //, userDetails
+                , userDetails
         );
-        result.setDetails(userDetails);
-        this.logger.debug("Authenticated user");
-        return result;
     }
     
     @Override

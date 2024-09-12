@@ -1,5 +1,7 @@
 package sample.config.provider.oauth2.converter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
@@ -29,6 +31,7 @@ import java.util.*;
  * @since 1.0.0.RELEASE
  */
 public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter implements AuthenticationConverter {
+    private final Logger log = LoggerFactory.getLogger(CustomOAuth2AuthorizationCodeRequestAuthenticationConverter.class);
     private static final String DEFAULT_ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc6749#section-4.1.2.1";
     private static final String PKCE_ERROR_URI = "https://datatracker.ietf.org/doc/html/rfc7636#section-4.4.1";
     private static final Authentication ANONYMOUS_AUTHENTICATION = new AnonymousAuthenticationToken(
@@ -38,6 +41,7 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
     @Override
     public Authentication convert(HttpServletRequest request) {
         if (!"GET".equals(request.getMethod()) && !OIDC_REQUEST_MATCHER.matches(request)) {
+            log.error("not support GET method");
             return null;
         }
 

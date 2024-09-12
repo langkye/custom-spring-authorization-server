@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.server.authorization.authentication.O
 import org.springframework.security.oauth2.server.authorization.authentication.OAuth2AuthorizationConsentAuthenticationToken;
 import org.springframework.security.oauth2.server.authorization.util.SpringAuthorizationServerVersion;
 
+import java.io.Serial;
 import java.util.*;
 
 /**
@@ -33,6 +34,7 @@ import java.util.*;
  * @see OAuth2AuthorizationCodeRequestAuthenticationProvider
  */
 public class CustomOAuth2AuthorizationConsentAuthenticationToken extends OAuth2AuthorizationConsentAuthenticationToken {
+	@Serial
 	private static final long serialVersionUID = SpringAuthorizationServerVersion.SERIAL_VERSION_UID;
 
 	/**

@@ -1,12 +1,28 @@
 package sample.domain.user.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
  * @author langkye
  * @since 1.0.0.RELEASE
  */
+//@JsonTypeInfo(
+//        //use = JsonTypeInfo.Id.NAME,
+//        use = JsonTypeInfo.Id.CLASS,
+//        include = JsonTypeInfo.As.PROPERTY,
+//        //property = "type"
+//        property = "@class"
+//)
+//@JsonSubTypes({
+//        @JsonSubTypes.Type(value = Token.class, name = "token")
+//})
 public class Token implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
     private String accessToken;
     private Long accessTokenExpiredTime;
