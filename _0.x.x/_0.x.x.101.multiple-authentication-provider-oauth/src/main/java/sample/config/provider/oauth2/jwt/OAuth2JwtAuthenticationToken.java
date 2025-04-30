@@ -1,0 +1,132 @@
+package sample.config.provider.oauth2.jwt;
+
+import org.springframework.lang.NonNull;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.AuthorityUtils;
+import sample.config.provider.AuthType;
+import sample.config.provider.IAuthRequest;
+import sample.config.provider.ITokenProvider;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Objects;
+
+/**
+ * @author langkye
+ * @since 1.0.0.RELEASE
+ */
+public class OAuth2JwtAuthenticationToken extends AbstractAuthenticationToken implements ITokenProvider {
+    private Object credentials;
+    private Object principal;
+    private Object details;
+    private Collection<GrantedAuthority> authorities;
+
+    private boolean authenticated = false;
+
+    public OAuth2JwtAuthenticationToken() {
+        super(AuthorityUtils.NO_AUTHORITIES);
+    }
+
+    public static OAuth2JwtAuthenticationToken authenticated(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities, Object details) {
+        return new OAuth2JwtAuthenticationToken(principal, credentials, authorities, details);
+    }
+
+    public static OAuth2JwtAuthenticationToken authenticated(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
+        return new OAuth2JwtAuthenticationToken(principal, credentials, authorities);
+    }
+
+    public static OAuth2JwtAuthenticationToken unauthenticated(Object principal, Object credentials ) {
+        return new OAuth2JwtAuthenticationToken(principal, credentials);
+    }
+
+    public OAuth2JwtAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities) {
+        super(Objects.isNull(authorities) ? AuthorityUtils.NO_AUTHORITIES : new ArrayList<>(authorities));
+        this.credentials = credentials;
+        this.principal = principal;
+        this.authorities = Objects.isNull(authorities) ? AuthorityUtils.NO_AUTHORITIES : new ArrayList<>(authorities);
+        this.authenticated = true;
+    }
+
+    public OAuth2JwtAuthenticationToken(Object principal, Object credentials, Collection<? extends GrantedAuthority> authorities, Object details) {
+        super(Objects.isNull(authorities) ? AuthorityUtils.NO_AUTHORITIES : new ArrayList<>(authorities));
+        this.credentials = credentials;
+        this.principal = principal;
+        this.authorities = Objects.isNull(authorities) ? AuthorityUtils.NO_AUTHORITIES : new ArrayList<>(authorities);
+        this.authenticated = true;
+        this.details = details;
+    }
+
+    public OAuth2JwtAuthenticationToken(Object principal, Object credentials) {
+        super(AuthorityUtils.NO_AUTHORITIES);
+        this.credentials = credentials;
+        this.principal = principal;
+        this.authorities = AuthorityUtils.NO_AUTHORITIES;
+        this.authenticated = false;
+    }
+
+    @Override
+    public Object getDetails() {
+        return this.details;
+    }
+
+    @Override
+    public void setDetails(Object details) {
+        this.details = details;
+    }
+
+    @Override
+    public Object getCredentials() {
+        return credentials;
+    }
+
+    @Override
+    public void setCredentials(Object credentials) {
+        this.credentials = credentials;
+    }
+
+    @Override
+    public Object getPrincipal() {
+        return principal;
+    }
+
+    @Override
+    public void setPrincipal(Object principal) {
+        this.principal = principal;
+    }
+
+    @Override
+    public Collection<GrantedAuthority> getAuthorities() {
+        return (Collection<GrantedAuthority>) authorities;
+    }
+
+    @Override
+    public void setAuthorities(Collection<GrantedAuthority> authorities) {
+        this.authorities = authorities;
+    }
+
+    @Override
+    public boolean isAuthenticated() {
+        return authenticated;
+    }
+
+    @Override
+    public void setAuthenticated(boolean authenticated) {
+        this.authenticated = authenticated;
+    }
+
+    @Override
+    public boolean supports(@NonNull Number loginType) {
+        return Objects.equals(AuthType.password.getType(), loginType);
+    }
+
+    @Override
+    public @NonNull AuthType supports() {
+        return AuthType.password;
+    }
+
+    @Override
+    public @NonNull ITokenProvider parser(@NonNull IAuthRequest request) {
+        return OAuth2JwtAuthenticationToken.unauthenticated(request, request);
+    }
+}

@@ -12,7 +12,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>_1.x.x.0-default-authorization-server</module>
-        <!--<module>_1.x.x.0.demo-authorizationserver</module>-->
+        <module>_1.x.x.0.demo-authorizationserver</module>
     </modules>
 
     <artifactId>_1.x.x</artifactId>
