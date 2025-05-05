@@ -61,12 +61,12 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
 
             // JwtValidationException
             if (cause instanceof JwtValidationException) {
-                log.warn("JWT Token 过期，具体内容:" + cause.getMessage());
+                //log.warn("JWT Token 过期，具体内容:" + cause.getMessage());
                 errorMessage = "无效的token信息";
             }
             // BadJwtException
             else if (cause instanceof BadJwtException) {
-                log.warn("JWT 签名异常，具体内容：" + cause.getMessage());
+                //log.warn("JWT 签名异常，具体内容：" + cause.getMessage());
                 errorMessage = "无效的token信息";
             }
             // AccountExpiredException
@@ -115,6 +115,8 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             put("code", HttpServletResponse.SC_UNAUTHORIZED);
             put("message", finalErrorMessage);
         }};
+
+        log.error(finalErrorMessage, authException);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String resBody;
