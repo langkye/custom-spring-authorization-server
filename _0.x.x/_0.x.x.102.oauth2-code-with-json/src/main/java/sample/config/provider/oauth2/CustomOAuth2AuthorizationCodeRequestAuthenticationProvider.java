@@ -274,13 +274,8 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationProvider implemen
                 authorizationRequest.getScopes().size() == 1) {
             return false;
         }
-
-        if (authorizationConsent != null &&
-                authorizationConsent.getScopes().containsAll(authorizationRequest.getScopes())) {
-            return false;
-        }
-
-        return true;
+        
+        return authorizationConsent == null || authorizationConsent.getScopes().containsAll(authorizationRequest.getScopes());
     }
 
     private static boolean isPrincipalAuthenticated(Authentication principal) {
