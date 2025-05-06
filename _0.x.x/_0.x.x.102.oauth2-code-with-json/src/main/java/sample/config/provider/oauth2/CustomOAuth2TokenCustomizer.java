@@ -118,7 +118,7 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
         Token token1 = Token.newInstances().withAccessToken(userSessionToken);
         // fixme 如何优雅属性
         log.error("TODO: 如何优雅设置属性");
-        ((sample.domain.user.model.response.UserVo)userDetail).setToken(token1);
+        //((sample.domain.user.model.response.UserVo)userDetail).setToken(token1);
         //将用户信息放置到redis中，并设置其过期时间为 client中的过期时间
         //strRedisHelper.strSet(LifeSecurityConstants.getUserTokenKey(token), userDetail, registeredClient.getTokenSettings().getAccessTokenTimeToLive().getSeconds(), TimeUnit.SECONDS);
         // todo 保存session
