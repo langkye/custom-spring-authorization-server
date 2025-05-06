@@ -23,7 +23,7 @@ import java.io.IOException;
  * @since 1.0.0.RELEASE
  */
 public class SmsAuthenticationFilter extends AbstractAuthenticationProcessingFilter {
-    private final Logger log = LoggerFactory.getLogger(SmsAuthenticationProvider.class);
+    private final Logger log = LoggerFactory.getLogger(SmsAuthenticationFilter.class);
     private static final AntPathRequestMatcher DEFAULT_ANT_PATH_REQUEST_MATCHER = new AntPathRequestMatcher("/api/login/sms", "POST");
 
     public SmsAuthenticationFilter() {
