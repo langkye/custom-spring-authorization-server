@@ -75,7 +75,7 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
         );
         
         //此处的token字符串是前端拿到的jwtToken信息中解密后的字符串，在这里将自定义jwtToken的实现，将定制jwt的 header 和 claims，将此token存放到 claim 中
-        String userSessionToken = FriendlyId.createFriendlyId();
+        String userSessionId = FriendlyId.createFriendlyId();
         
         Authentication authorizationGrant = context.getAuthorizationGrant();
         OAuth2Authorization authorization = context.getAuthorization();
@@ -115,7 +115,7 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
         }
 
         //也需要将此token存放到当前登录用户中，为了在退出登录时进行获取redis中的信息并将其删除
-        Token token1 = Token.newInstances().withAccessToken(userSessionToken);
+        Token token1 = Token.newInstances().withAccessToken(userSessionId);
         // fixme 如何优雅属性
         log.error("TODO: 如何优雅设置属性");
         //((sample.domain.user.model.response.UserVo)userDetail).setToken(token1);
@@ -123,9 +123,9 @@ public class CustomOAuth2TokenCustomizer implements OAuth2TokenCustomizer<JwtEnc
         //strRedisHelper.strSet(LifeSecurityConstants.getUserTokenKey(token), userDetail, registeredClient.getTokenSettings().getAccessTokenTimeToLive().getSeconds(), TimeUnit.SECONDS);
         // todo 保存session
         log.error("TODO: 保存session");
-        log.info("生成的用户-token是-{}，此token作为key，用户信息作为value存储到redis中", userSessionToken);
+        log.info("生成的用户-session_id是-{}，此token作为key，用户信息作为value存储到redis中", userSessionId);
         //也可以在此处将当前登录用户的信息存放到jwt中，但是这样就不再安全。
         //context.getClaims().claim(LifeSecurityConstants.TOKEN, token).build();
-        context.getClaims().claim("access_token", userSessionToken).build();
+        context.getClaims().claim("session_id", userSessionId).build();
     }
 }
