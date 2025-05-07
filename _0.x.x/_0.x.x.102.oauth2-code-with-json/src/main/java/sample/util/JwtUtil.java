@@ -40,7 +40,7 @@ public class JwtUtil {
         
         // refreshToken
         long refreshTokenExpireTime = authorizationProperties.getJwt().getRefreshTokenExpireTime();
-        String refreshToken = createJWTToken(userDetails, refreshTokenExpireTime);
+        String refreshToken = createRefreshToken(userDetails, refreshTokenExpireTime);
         
         return Token.newInstances()
                 .withAccessToken(accessToken)
@@ -82,6 +82,10 @@ public class JwtUtil {
 
     public String createAccessToken(UserDetails userDetails) {
         return createJWTToken(userDetails, authorizationProperties.getJwt().getAccessTokenExpireTime());
+    }
+
+    public String createRefreshToken(UserDetails userDetails, long timeToExpire) {
+        return createJWTToken(userDetails, timeToExpire, refreshKey);
     }
 
     public String createRefreshToken(UserDetails userDetails) {
