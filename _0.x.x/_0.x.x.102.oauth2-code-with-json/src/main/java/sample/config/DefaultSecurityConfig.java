@@ -94,6 +94,7 @@ public class DefaultSecurityConfig {
 								.decoder(jwtDecoder)
 								.jwtAuthenticationConverter(jwtAuthenticationConverter)
 						)
+						.withObjectPostProcessor(new BearerTokenAuthenticationFailureHandlerObjectPostProcessor())
 				)
 				// 应用自定义登录处理逻辑
 				.apply(new CustomAuthenticationFilterConfigurer<>()).successHandler(customAuthenticationSuccessHandler).failureHandler(customAuthenticationFailureHandler)
