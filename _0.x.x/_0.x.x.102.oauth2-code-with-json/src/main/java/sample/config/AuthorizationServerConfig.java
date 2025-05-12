@@ -21,14 +21,16 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.oauth2.core.OAuth2Error;
 import org.springframework.security.oauth2.core.OAuth2ErrorCodes;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.authentication.*;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.preauth.AbstractPreAuthenticatedProcessingFilter;
 import sample.config.handler.*;
@@ -44,7 +46,7 @@ import java.util.function.Consumer;
  * @author Joe Grandja
  * @since 0.0.1
  */
-@Configuration(proxyBeanMethods = false)
+@Configuration(proxyBeanMethods = true)
 public class AuthorizationServerConfig {
 	@Resource
 	private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
@@ -54,6 +56,8 @@ public class AuthorizationServerConfig {
 	@Resource private JwtFilter jwtFilter;
 	@Resource private AuthenticationManager authenticationManager;
 	@Resource private AuthorizationProperties authorizationProperties;
+	@Resource private JwtDecoder jwtDecoder;
+	@Resource private JwtAuthenticationConverter jwtAuthenticationConverter;
 
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
@@ -84,12 +88,15 @@ public class AuthorizationServerConfig {
 		
 		// @formatter:off
 		http
+				.sessionManagement(AbstractHttpConfigurer::disable)
 				.exceptionHandling(exceptions ->
 						exceptions.authenticationEntryPoint(customAuthenticationEntryPoint).accessDeniedHandler(customAccessDeniedHandler)
 				)
 				//.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
 				.oauth2ResourceServer((oauth2) -> oauth2
-						.jwt(Customizer.withDefaults())
+						//.jwt(Customizer.withDefaults())
+						.jwt(jwt -> jwt.decoder(jwtDecoder))
+						.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
 						.withObjectPostProcessor(new BearerTokenAuthenticationFailureHandlerObjectPostProcessor())
 				)
 				// 禁用csrf
@@ -153,6 +160,4 @@ public class AuthorizationServerConfig {
 
 		}
 	}
-
-
 }
