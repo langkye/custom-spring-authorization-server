@@ -26,6 +26,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -58,6 +60,8 @@ public class DefaultSecurityConfig {
 	@Resource private AuthorizationProperties authorizationProperties;
 	@Resource private Environment environment;
 	@Resource private JwtFilter jwtFilter;
+	@Resource private JwtDecoder jwtDecoder;
+	@Resource private JwtAuthenticationConverter jwtAuthenticationConverter;
 
 
 	// @formatter:off
@@ -81,9 +85,16 @@ public class DefaultSecurityConfig {
 				.formLogin(AbstractHttpConfigurer::disable)
 				.logout(AbstractHttpConfigurer::disable)
 				// 禁用csrf
-				.csrf(AbstractHttpConfigurer::disable)
-				// token校验
+				.csrf(AbstractHttpConfigurer::disable)// 核心：启用 JWT 资源服务器，从 Authorization 头中提取 Bearer Token
+				// [1]token校验，请求先经过{JwtFilter}验证，再经过[2]
 				.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+				// [2]配置资源服务器jwt，请求经{BearerTokenAuthenticationFilter}鉴权
+				.oauth2ResourceServer(oauth2 -> oauth2
+						.jwt(jwt -> jwt
+								.decoder(jwtDecoder)
+								.jwtAuthenticationConverter(jwtAuthenticationConverter)
+						)
+				)
 				// 应用自定义登录处理逻辑
 				.apply(new CustomAuthenticationFilterConfigurer<>()).successHandler(customAuthenticationSuccessHandler).failureHandler(customAuthenticationFailureHandler)
 				//.addFilterAt(new CustomAuthenticationFilter(http.getSharedObject(AuthenticationManager.class)), UsernamePasswordAuthenticationFilter.class)
