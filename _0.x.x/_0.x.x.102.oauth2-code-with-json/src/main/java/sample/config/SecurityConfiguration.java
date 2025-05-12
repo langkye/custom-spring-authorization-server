@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 import org.slf4j.Logger;
@@ -159,21 +158,20 @@ public class SecurityConfiguration {
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
-        RSAKey rsaKey = Jwks.generateRsa();
+        RSAKey rsaKey = Jwks.generateRsa(); // 生成RSA密钥对
         JWKSet jwkSet = new JWKSet(rsaKey);
+        //JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(jwkSet);
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
-        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    public JwtDecoder jwtDecoder() {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource());
     }
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        RSAKey rsaKey = Jwks.generateRsa(); // 生成RSA密钥对
-        JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(new JWKSet(rsaKey));
-        return new NimbusJwtEncoder(jwkSource);
+        return new NimbusJwtEncoder(jwkSource());
     }
 
     @Bean
@@ -199,19 +197,4 @@ public class SecurityConfiguration {
                 .tokenEndpoint(authorizationProperties.getServer().getTokenEndpoint())
                 .build();
     }
-
-    //@Bean
-    //public EmbeddedDatabase embeddedDatabase() {
-    //    // @formatter:off
-    //    return new EmbeddedDatabaseBuilder()
-    //            .generateUniqueName(true)
-    //            .setType(EmbeddedDatabaseType.H2)
-    //            .setScriptEncoding("UTF-8")
-    //            .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-schema.sql")
-    //            .addScript("org/springframework/security/oauth2/server/authorization/oauth2-authorization-consent-schema.sql")
-    //            .addScript("org/springframework/security/oauth2/server/authorization/client/oauth2-registered-client-schema.sql")
-    //            .build();
-    //    // @formatter:on
-    //}
-
 }

@@ -26,10 +26,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -44,8 +40,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-
-import static org.springframework.security.config.Customizer.withDefaults;
 
 /**
  * @author Joe Grandja
@@ -78,15 +72,12 @@ public class DefaultSecurityConfig {
 				// 配置跨域
 				.cors(cors -> cors.configurationSource(corsConfigurationSource())) 
 				// 请求
-				//.requestMatchers()
-				//.antMatchers("/oauth2/authorize", "/oauth2/token")  // 将 JwtFilter 应用于这些端点
-				//.and()
+				.mvcMatcher("/api/**")
 				.authorizeRequests(authorizeRequests -> authorizeRequests
 						.mvcMatchers(authorizationProperties.getSecurity().getPermitUri().toArray(new String[]{})).permitAll()
 						//.antMatchers("/oauth2/authorize", "/oauth2/token").authenticated()
 						.anyRequest().authenticated())
 				// 禁用表单登录
-				//.formLogin(withDefaults())
 				.formLogin(AbstractHttpConfigurer::disable)
 				.logout(AbstractHttpConfigurer::disable)
 				// 禁用csrf
@@ -100,26 +91,6 @@ public class DefaultSecurityConfig {
 		return http.build();
 	}
 	// @formatter:on
-
-	// @formatter:off
-	//@Bean
-	UserDetailsService users() {
-		UserDetails user = User.withDefaultPasswordEncoder()
-				.username("user")
-				.password("user")
-				.roles("USER")
-				.authorities("USER")
-				.build();
-		UserDetails admin = User.withDefaultPasswordEncoder()
-				.username("admin")
-				.password("admin")
-				.roles("ADMIN")
-				.authorities("ADMIN")
-				.build();
-		return new InMemoryUserDetailsManager(user, admin);
-	}
-	// @formatter:on
-
 
 	/**
 	 * 我们在 Spring Boot 中有几种其他方式配置 CORS

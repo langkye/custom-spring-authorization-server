@@ -95,8 +95,11 @@ public class AuthorizationServerConfig {
 				//.oauth2ResourceServer(OAuth2ResourceServerConfigurer::jwt)
 				.oauth2ResourceServer((oauth2) -> oauth2
 						//.jwt(Customizer.withDefaults())
-						.jwt(jwt -> jwt.decoder(jwtDecoder))
-						.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
+						.jwt(jwt -> jwt
+								.decoder(jwtDecoder)
+								.jwtAuthenticationConverter(jwtAuthenticationConverter)
+								//.jwkSetUri()
+						)
 						.withObjectPostProcessor(new BearerTokenAuthenticationFailureHandlerObjectPostProcessor())
 				)
 				// 禁用csrf
