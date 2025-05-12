@@ -2,7 +2,11 @@ package sample.config;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nimbusds.jose.Algorithm;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.Requirement;
 import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
@@ -28,8 +32,10 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
+import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
@@ -47,8 +53,8 @@ import sample.jose.Jwks;
 import sample.property.AuthorizationProperties;
 
 import javax.annotation.Resource;
-import java.util.List;
-import java.util.UUID;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -158,8 +164,27 @@ public class SecurityConfiguration {
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
-        RSAKey rsaKey = Jwks.generateRsa(); // 生成RSA密钥对
-        JWKSet jwkSet = new JWKSet(rsaKey);
+        // FIXME 持久化 密钥
+        // 创建 HS512 对称密钥的 JWK
+        OctetSequenceKey ak = new OctetSequenceKey.Builder(
+                new SecretKeySpec(Base64.getDecoder().decode(authorizationProperties.getJwt().getKey()), "HmacSHA512")
+        )
+                .keyID("HS512-ACCESS_KEY") // 唯一标识
+                .algorithm(JWSAlgorithm.HS512) // 算法标识
+                //.algorithm(new Algorithm("HmacSHA512", Requirement.REQUIRED)) // 算法标识
+                .build();
+        OctetSequenceKey rk = new OctetSequenceKey.Builder(
+                new SecretKeySpec(Base64.getDecoder().decode(authorizationProperties.getJwt().getRefreshKey()), "HmacSHA512")
+        )
+                .keyID("HS512-REFRESH_KEY") // 唯一标识
+                .algorithm(JWSAlgorithm.HS512) // 算法标识
+                //.algorithm(new Algorithm("HmacSHA512", Requirement.REQUIRED)) // 算法标识
+                .build();
+
+
+        // FIXME 持久化 密钥，避免每次应用重启后 kid（Key ID）变化导致旧令牌无法验证（资源服务器通过 kid 查找对应的公钥验证令牌，若 kid 改变，旧的公钥丢失，旧令牌失效。）
+        RSAKey rsaKey = Jwks.generateRsa(); // 生成固定 kid 的 RSA密钥对？
+        JWKSet jwkSet = new JWKSet(List.of(rsaKey, ak, rk));
         //JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(jwkSet);
         return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
     }
@@ -178,9 +203,9 @@ public class SecurityConfiguration {
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwt -> {
-            // 从JWT声明中提取权限（如scope或roles）
+            // 从JWT声明中提取权限（如scope或roles）FIXME
             List<String> scopes = jwt.getClaim("scope");
-            return scopes.stream()
+            return Optional.ofNullable(scopes).orElse(new ArrayList<>()).stream()
                     .map(scope -> new SimpleGrantedAuthority("SCOPE_" + scope))
                     .collect(Collectors.toList());
         });
