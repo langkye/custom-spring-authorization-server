@@ -3,6 +3,9 @@ package sample.domain.oauth2.service.impl;
 import com.devskiller.friendly_id.FriendlyId;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeanWrapper;
+import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -20,10 +23,12 @@ import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaUpdate;
 import javax.persistence.criteria.Root;
+import java.beans.PropertyDescriptor;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Date;
 import java.util.Optional;
@@ -206,11 +211,24 @@ public class Oauth2RegisteredKeyServiceImpl implements IOauth2RegisteredKeyServi
         return entity;
     }
 
+    @Transactional
     @Override
     public Oauth2RegisteredKey dynamicUpdate(Oauth2RegisteredKey oauth2RegisteredKey) {
         Assert.notNull(oauth2RegisteredKey.getId(), "id can not be null");
-        oauth2RegisteredKeyRepository.save(oauth2RegisteredKey);
+
+        Oauth2RegisteredKey target = em.find(Oauth2RegisteredKey.class, oauth2RegisteredKey.getId());
+        BeanUtils.copyProperties(oauth2RegisteredKey, target, getNullPropertyNames(oauth2RegisteredKey));
+
+        oauth2RegisteredKeyRepository.save(target);
         
-        return oauth2RegisteredKey;
+        return target;
+    }
+
+    public static String[] getNullPropertyNames(Object source) {
+        final BeanWrapper src = new BeanWrapperImpl(source);
+        return Arrays.stream(src.getPropertyDescriptors())
+                .map(PropertyDescriptor::getName)
+                .filter(name -> src.getPropertyValue(name) == null)
+                .toArray(String[]::new);
     }
 }
