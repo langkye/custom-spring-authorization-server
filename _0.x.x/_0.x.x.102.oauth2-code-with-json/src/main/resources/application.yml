@@ -8,15 +8,21 @@ spring:
     username: root
     password: root
   jpa:
-    database: h2
-    database-platform: org.hibernate.dialect.H2Dialect
+    database: MYSQL #h2
+    database-platform: org.hibernate.dialect.MySQL8Dialect #org.hibernate.dialect.H2Dialect        
+    show-sql: true
     hibernate:
       ddl-auto: none
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     properties:
       hibernate:
         cache:
           use_second_level_cache: false
-    show-sql: true
+        format_sql: true
+  jackson:
+    serialization:
+      indent-output: true
 
 logging:
   level:

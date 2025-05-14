@@ -80,7 +80,8 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (Exception e) {
             InternalAuthenticationServiceException authenticationServiceException = new InternalAuthenticationServiceException(e.getMessage(), e);
-            log.error("", e);
+            log.error("", e); 
+            // fixme 放行，通过公共异常处理器相应？
             customAuthenticationFailureHandler.onAuthenticationFailure(request, response, authenticationServiceException);
         }
     }

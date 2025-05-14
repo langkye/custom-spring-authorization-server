@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -38,6 +37,9 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         Throwable throwable = authException.fillInStackTrace();
 
         String errorMessage = null;
+        
+        int httpStatus = HttpServletResponse.SC_OK;
+        int code = HttpServletResponse.SC_UNAUTHORIZED;
 
         // BadCredentialsException
         if (authException instanceof BadCredentialsException) {
@@ -51,6 +53,11 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         // 
         else if (authException instanceof AuthenticationCredentialsNotFoundException) {
             errorMessage = "凭据不能为空";
+        }
+        else if (authException instanceof InternalAuthenticationServiceException) {
+            code = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+            errorMessage = "服务器内部错误";
+            errorMessage = authException.getMessage();
         }
         // Other Exception
         else {
@@ -105,7 +112,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
             errorMessage = "认证失败";
         }
 
-        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setStatus(httpStatus);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
@@ -116,10 +123,11 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         //));
 
         String finalErrorMessage = errorMessage;
-        Map<String, Object> map = new HashMap<String, Object>(){{
-            put("code", HttpServletResponse.SC_UNAUTHORIZED);
-            put("message", finalErrorMessage);
-        }};
+        Map<String, Object> map = Map.of(
+                "code", code
+                , "message", finalErrorMessage
+        );
+        log.error("认证失败，具体内容: {}", finalErrorMessage, authException);
 
         ObjectMapper objectMapper = new ObjectMapper();
         String resBody;
