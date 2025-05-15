@@ -7,8 +7,10 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeanWrapper;
 import org.springframework.beans.BeanWrapperImpl;
 import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
@@ -22,16 +24,16 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaUpdate;
+import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import java.beans.PropertyDescriptor;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.interfaces.ECPrivateKey;
+import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author langkye
@@ -49,6 +51,52 @@ public class Oauth2RegisteredKeyServiceImpl implements IOauth2RegisteredKeyServi
         Pageable pageable = Pageable.ofSize(10);
         Example<Oauth2RegisteredKey> example = Example.of(oauth2RegisteredKey);
         return oauth2RegisteredKeyRepository.findAll(example, pageable);
+    }
+
+    @Override
+    public Oauth2RegisteredKey queryOneByKeyId(String keyId) {
+        return oauth2RegisteredKeyRepository.findByKeyId(keyId).orElse(null);
+    }
+
+    @Override
+    public List<Oauth2RegisteredKey> queryAllActiveKeys() {
+        Oauth2RegisteredKey oauth2RegisteredKey = new Oauth2RegisteredKey();
+        oauth2RegisteredKey.setStatus(1L);
+
+        ExampleMatcher matching = ExampleMatcher.matching();
+        matching.withMatcher("keyId", ExampleMatcher.GenericPropertyMatchers.startsWith()); // keyId like 'keyId%'
+        Example<Oauth2RegisteredKey> example = Example.of(oauth2RegisteredKey, matching);
+
+        Specification<Oauth2RegisteredKey> specification = (root, query, builder) -> {
+            List<Predicate> list4and = new ArrayList<>();
+            
+            //精确查询
+            list4and.add(builder.equal(root.get("status"), oauth2RegisteredKey.getStatus()));
+            
+            //模糊查询
+            //list4and.add(builder.like(root.get("algorithm"), "%" + oauth2RegisteredKey.getAlgorithm() + "%"));
+            
+            //范围查询
+            list4and.add(builder.lessThan(root.get("keyIssuedAt"), new Date()));
+
+            Predicate[] predicates4and = new Predicate[list4and.size()];
+            list4and.toArray(predicates4and);
+            Predicate and = builder.and(predicates4and);
+            //return and;
+
+
+            List<Predicate> list4or = new ArrayList<>();
+            list4or.add(builder.greaterThan(root.get("keyExpiresAt"), new Date()));
+            list4or.add(builder.isNull(root.get("keyExpiresAt")));
+
+            Predicate[] predicates4or = new Predicate[list4or.size()];
+            list4or.toArray(predicates4or);
+            Predicate or = builder.or(predicates4or);
+            
+            return query.where(and, or).getRestriction();
+        };
+        
+        return oauth2RegisteredKeyRepository.findAll(specification);
     }
 
     /**
@@ -87,7 +135,7 @@ public class Oauth2RegisteredKeyServiceImpl implements IOauth2RegisteredKeyServi
             SecretKey key = Keys.secretKeyFor(signatureAlgorithm);
             privateKeyHexString = Base64.getEncoder().encodeToString(key.getEncoded());
         }
-        if (isRsa || isEllipticCurve) {
+        if (isRsa) {
             //KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
             //keyPairGenerator.initialize(2048);
             //keyPair = keyPairGenerator.generateKeyPair();
@@ -95,6 +143,14 @@ public class Oauth2RegisteredKeyServiceImpl implements IOauth2RegisteredKeyServi
             KeyPair keyPair = Keys.keyPairFor(signatureAlgorithm);
             RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
             RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
+
+            privateKeyHexString = Base64.getEncoder().encodeToString(privateKey.getEncoded());
+            publicKeyHexString = Base64.getEncoder().encodeToString(publicKey.getEncoded());
+        }
+        if (isEllipticCurve) {
+            KeyPair keyPair = Keys.keyPairFor(signatureAlgorithm);
+            ECPrivateKey privateKey = (ECPrivateKey) keyPair.getPrivate();
+            ECPublicKey publicKey = (ECPublicKey) keyPair.getPublic();
 
             privateKeyHexString = Base64.getEncoder().encodeToString(privateKey.getEncoded());
             publicKeyHexString = Base64.getEncoder().encodeToString(publicKey.getEncoded());

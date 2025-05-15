@@ -1,19 +1,19 @@
 package sample.util;
 
+import com.nimbusds.jose.jwk.JWK;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import sample.config.KeyStorage;
 import sample.domain.user.model.entity.Token;
 import sample.domain.user.model.response.UserVo;
 import sample.property.AuthorizationProperties;
 
 import javax.crypto.spec.SecretKeySpec;
 import java.security.Key;
-import java.util.Base64;
-import java.util.Date;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -27,10 +27,24 @@ public class JwtUtil {
     private final Key refreshKey; // 用于签名 Refresh Token
     private final AuthorizationProperties authorizationProperties;
 
-    public JwtUtil(AuthorizationProperties authorizationProperties) {
+    public JwtUtil(AuthorizationProperties authorizationProperties, KeyStorage keyStorage) {
         this.authorizationProperties = authorizationProperties;
+
         key = new SecretKeySpec(Base64.getDecoder().decode(authorizationProperties.getJwt().getKey()), "HmacSHA512");
         refreshKey = new SecretKeySpec(Base64.getDecoder().decode(authorizationProperties.getJwt().getRefreshKey()), "HmacSHA512");
+        
+        //List<Key> keys = keyStorage.allActiveSignKeys();
+        //
+        //if (!keys.isEmpty()) {
+        //    Random random = new Random();
+        //    int index = random.nextInt(keys.size());
+        //
+        //    Key k = keys.get(index);
+        //    key = k;
+        //    refreshKey = k;
+        //} else {
+        //    throw new RuntimeException("no active sign key");
+        //}
     }
     
     public Token createToken(UserDetails userDetails) {
@@ -63,7 +77,7 @@ public class JwtUtil {
      * @param signKey      签名使用的 key
      * @return JWT
      */
-    public String createJWTToken(UserDetails userDetails, long timeToExpire, Key signKey) {
+    public String createJWTToken0(UserDetails userDetails, long timeToExpire, Key signKey) {
         return Jwts
             .builder()
             .setId("lnkdoc.cn")
@@ -78,6 +92,34 @@ public class JwtUtil {
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + timeToExpire))
             .signWith(signKey, SignatureAlgorithm.HS512).compact();
+    }
+
+    /**
+     * 根据用户信息生成一个 JWT
+     *
+     * @param userDetails  用户信息
+     * @param timeToExpire 毫秒单位的失效时间
+     * @param signKey      签名使用的 key
+     * @return JWT
+     */
+    public String createJWTToken(UserDetails userDetails, long timeToExpire, Key signKey) {
+        return Jwts
+            .builder()
+            .setId("lnkdoc.cn")
+            .setSubject(userDetails.getUsername())
+            .setHeaderParam("typ", "JWT")
+            .setHeaderParam("alg", "HS512")
+            //.setHeaderParam("kid", "lnkdoc.cn")
+            .claim("authorities",
+                userDetails.getAuthorities().stream()
+                    .map(GrantedAuthority::getAuthority)
+                    .collect(Collectors.toList()))
+                .claim("loginType", ((UserVo)userDetails).getLoginType())
+                .claim("username", userDetails.getUsername())
+                .claim("telephone", ((UserVo)userDetails).getTelephone())
+            .setIssuedAt(new Date(System.currentTimeMillis()))
+            .setExpiration(new Date(System.currentTimeMillis() + timeToExpire))
+            .signWith(signKey).compact();
     }
 
     public String createAccessToken(UserDetails userDetails) {

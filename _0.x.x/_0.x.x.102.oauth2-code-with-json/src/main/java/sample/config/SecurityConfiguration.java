@@ -5,11 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.Requirement;
+import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.OctetSequenceKey;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.JWKSource;
+import com.nimbusds.jose.proc.JWSKeySelector;
+import com.nimbusds.jose.proc.JWSVerificationKeySelector;
 import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jwt.SignedJWT;
+import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTProcessor;
+import io.jsonwebtoken.Jwts;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -49,11 +56,16 @@ import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2A
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.util.CollectionUtils;
 import sample.jose.Jwks;
 import sample.property.AuthorizationProperties;
 
 import javax.annotation.Resource;
+import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.security.Key;
+import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -66,6 +78,7 @@ import java.util.stream.Collectors;
 public class SecurityConfiguration {
     private final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
     @Resource private AuthorizationProperties authorizationProperties;
+    @Resource private KeyStorage keyStorage;
     
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
@@ -164,29 +177,30 @@ public class SecurityConfiguration {
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
-        // FIXME 持久化 密钥
-        // 创建 HS512 对称密钥的 JWK
-        OctetSequenceKey ak = new OctetSequenceKey.Builder(
-                new SecretKeySpec(Base64.getDecoder().decode(authorizationProperties.getJwt().getKey()), "HmacSHA512")
-        )
-                .keyID("HS512-ACCESS_KEY") // 唯一标识
-                .algorithm(JWSAlgorithm.HS512) // 算法标识
-                //.algorithm(new Algorithm("HmacSHA512", Requirement.REQUIRED)) // 算法标识
-                .build();
-        OctetSequenceKey rk = new OctetSequenceKey.Builder(
-                new SecretKeySpec(Base64.getDecoder().decode(authorizationProperties.getJwt().getRefreshKey()), "HmacSHA512")
-        )
-                .keyID("HS512-REFRESH_KEY") // 唯一标识
-                .algorithm(JWSAlgorithm.HS512) // 算法标识
-                //.algorithm(new Algorithm("HmacSHA512", Requirement.REQUIRED)) // 算法标识
-                .build();
-
-
-        // FIXME 持久化 密钥，避免每次应用重启后 kid（Key ID）变化导致旧令牌无法验证（资源服务器通过 kid 查找对应的公钥验证令牌，若 kid 改变，旧的公钥丢失，旧令牌失效。）
-        RSAKey rsaKey = Jwks.generateRsa(); // 生成固定 kid 的 RSA密钥对？
-        JWKSet jwkSet = new JWKSet(List.of(rsaKey, ak, rk));
+        //JWKSet jwkSet = new JWKSet(keyStorage.allActiveKeys());
+        JWKSet jwkSet = new JWKSet(keyStorage.simpleKeys());
         //JWKSource<SecurityContext> jwkSource = new ImmutableJWKSet<>(jwkSet);
-        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+        return (jwkSelector, securityContext) -> {
+            // 1. 从 selector 的 matcher 里拿到所有 kid
+            
+            List<String> kids = Optional.ofNullable(jwkSelector.getMatcher().getKeyIDs()).orElse(new HashSet<>())
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .toList();
+
+            List<JWK> activeJWKs = jwkSelector.select(jwkSet);
+            Map<String, List<JWK>> map = activeJWKs.stream().collect(Collectors.groupingBy(JWK::getKeyID));
+
+            List<JWK> allJWKs = new ArrayList<>(activeJWKs);
+            
+            kids.forEach(kid -> {
+                if (!map.containsKey(kid)) {
+                    allJWKs.add(keyStorage.findKey(kid));
+                }
+            });
+            
+            return allJWKs;
+        };
     }
 
     @Bean

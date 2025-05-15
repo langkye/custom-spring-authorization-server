@@ -1,5 +1,6 @@
 package sample.web;
 
+import org.springframework.util.Assert;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -7,7 +8,6 @@ import sample.domain.oauth2.model.Oauth2RegisteredKey;
 import sample.domain.oauth2.service.IOauth2RegisteredKeyService;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 
 /**
  * @author langkye
@@ -23,6 +23,19 @@ public class Oauth2RegisteredKeyController {
     //@PreAuthorize("hasAnyAuthority('USER', 'user') or hasAnyRole('USER', 'user')")
     public Object queryPage(@RequestBody Oauth2RegisteredKey entity) {
         return oauth2RegisteredKeyService.queryPage(entity);
+    }
+
+    @RequestMapping("/queryOneByKeyId")
+    //@PreAuthorize("hasAnyAuthority('USER', 'user') or hasAnyRole('USER', 'user')")
+    public Object queryOneByKeyId(@RequestBody Oauth2RegisteredKey entity) {
+        Assert.notNull(entity.getKeyId(), "keyId can not be null");
+        return oauth2RegisteredKeyService.queryOneByKeyId(entity.getKeyId());
+    }
+
+    @RequestMapping("/queryAllActiveKeys")
+    //@PreAuthorize("hasAnyAuthority('USER', 'user') or hasAnyRole('USER', 'user')")
+    public Object queryAllActiveKeys(@RequestBody Oauth2RegisteredKey entity) {
+        return oauth2RegisteredKeyService.queryAllActiveKeys();
     }
 
     @RequestMapping("/generate")
