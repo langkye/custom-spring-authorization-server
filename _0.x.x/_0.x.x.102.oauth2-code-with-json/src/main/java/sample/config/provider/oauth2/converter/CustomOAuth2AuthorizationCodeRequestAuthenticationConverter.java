@@ -41,7 +41,7 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
     @Override
     public Authentication convert(HttpServletRequest request) {
         if (!"GET".equals(request.getMethod()) && !OIDC_REQUEST_MATCHER.matches(request)) {
-            log.error("not support GET method");
+            log.debug("not support method or not oidc request");
             return null;
         }
 
@@ -85,28 +85,24 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationConverter impleme
             throwError(OAuth2ErrorCodes.INVALID_REQUEST, OAuth2ParameterNames.SCOPE);
         }
         if (StringUtils.hasText(scope)) {
-            scopes = new HashSet<>(
-                    Arrays.asList(StringUtils.delimitedListToStringArray(scope, " ")));
+            scopes = new HashSet<>(Arrays.asList(StringUtils.delimitedListToStringArray(scope, " ")));
         }
 
         // state (RECOMMENDED)
         String state = parameters.getFirst(OAuth2ParameterNames.STATE);
-        if (StringUtils.hasText(state) &&
-                parameters.get(OAuth2ParameterNames.STATE).size() != 1) {
+        if (StringUtils.hasText(state) && parameters.get(OAuth2ParameterNames.STATE).size() != 1) {
             throwError(OAuth2ErrorCodes.INVALID_REQUEST, OAuth2ParameterNames.STATE);
         }
 
         // code_challenge (REQUIRED for public clients) - RFC 7636 (PKCE)
         String codeChallenge = parameters.getFirst(PkceParameterNames.CODE_CHALLENGE);
-        if (StringUtils.hasText(codeChallenge) &&
-                parameters.get(PkceParameterNames.CODE_CHALLENGE).size() != 1) {
+        if (StringUtils.hasText(codeChallenge) && parameters.get(PkceParameterNames.CODE_CHALLENGE).size() != 1) {
             throwError(OAuth2ErrorCodes.INVALID_REQUEST, PkceParameterNames.CODE_CHALLENGE, PKCE_ERROR_URI);
         }
 
         // code_challenge_method (OPTIONAL for public clients) - RFC 7636 (PKCE)
         String codeChallengeMethod = parameters.getFirst(PkceParameterNames.CODE_CHALLENGE_METHOD);
-        if (StringUtils.hasText(codeChallengeMethod) &&
-                parameters.get(PkceParameterNames.CODE_CHALLENGE_METHOD).size() != 1) {
+        if (StringUtils.hasText(codeChallengeMethod) && parameters.get(PkceParameterNames.CODE_CHALLENGE_METHOD).size() != 1) {
             throwError(OAuth2ErrorCodes.INVALID_REQUEST, PkceParameterNames.CODE_CHALLENGE_METHOD, PKCE_ERROR_URI);
         }
 

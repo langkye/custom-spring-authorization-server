@@ -29,12 +29,13 @@ import org.springframework.util.StringUtils;
 
 import java.security.Principal;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
 /**
- * @see OAuth2AuthorizationCodeRequestAuthenticationProvider
  * @author langkye
+ * @see OAuth2AuthorizationCodeRequestAuthenticationProvider
  * @since 1.0.0.RELEASE
  */
 @Component
@@ -263,19 +264,33 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationProvider implemen
         return tokenContextBuilder.build();
     }
 
-    private static boolean requireAuthorizationConsent(RegisteredClient registeredClient,
-                                                       OAuth2AuthorizationRequest authorizationRequest, OAuth2AuthorizationConsent authorizationConsent) {
-
+    /**
+     * see {@link OAuth2AuthorizationCodeRequestAuthenticationProvider#requireAuthorizationConsent(RegisteredClient, OAuth2AuthorizationRequest, OAuth2AuthorizationConsent)}
+     */
+    @SuppressWarnings("ALL")
+    private static boolean requireAuthorizationConsent(RegisteredClient registeredClient, OAuth2AuthorizationRequest authorizationRequest, OAuth2AuthorizationConsent authorizationConsent) {
+        // 如果配置客户端时设置需要授权同意，则继续校验其他范围，否则不需要授权。
         if (!registeredClient.getClientSettings().isRequireAuthorizationConsent()) {
             return false;
         }
-        // 'openid' scope does not require consent
-        if (authorizationRequest.getScopes().contains(OidcScopes.OPENID) &&
-                authorizationRequest.getScopes().size() == 1) {
+
+        // 仅访问‘openid’范围信息，不需要授权。
+        if (authorizationRequest.getScopes().contains(OidcScopes.OPENID) && authorizationRequest.getScopes().size() == 1) {
             return false;
         }
-        
-        return authorizationConsent == null || authorizationConsent.getScopes().containsAll(authorizationRequest.getScopes());
+
+        // 未配置可授权范围
+        if (Objects.isNull(authorizationConsent)) {
+            return true;
+        }
+
+        // 如果请求的其他授权范围在客户端配置的授权范围内，则不需要授权。
+        if (authorizationConsent.getScopes().containsAll(authorizationRequest.getScopes())) {
+            return false;
+        }
+
+        // 请求的授权范围不在客户端配置的授权范围内，则需要授权。
+        return true;
     }
 
     private static boolean isPrincipalAuthenticated(Authentication principal) {
@@ -305,7 +320,7 @@ public class CustomOAuth2AuthorizationCodeRequestAuthenticationProvider implemen
         if (error.getErrorCode().equals(OAuth2ErrorCodes.INVALID_REQUEST) &&
                 (parameterName.equals(OAuth2ParameterNames.CLIENT_ID) ||
                         parameterName.equals(OAuth2ParameterNames.STATE))) {
-            redirectUri = null;		// Prevent redirects
+            redirectUri = null;        // Prevent redirects
         }
 
         OAuth2AuthorizationCodeRequestAuthenticationToken authorizationCodeRequestAuthenticationResult =

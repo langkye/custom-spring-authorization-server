@@ -115,6 +115,7 @@ public class CustomOAuth2AuthorizationEndpointFilter extends OncePerRequestFilte
             throws ServletException, IOException {
 
         if (!this.authorizationEndpointMatcher.matches(request)) {
+            logger.debug("not matches authorizationEndpointMatcher");
             filterChain.doFilter(request, response);
             return;
         }
