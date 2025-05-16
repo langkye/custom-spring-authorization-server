@@ -29,6 +29,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.authentication.*;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationEndpointConfigurer;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
@@ -48,8 +49,8 @@ import java.util.function.Consumer;
  */
 @Configuration(proxyBeanMethods = true)
 public class AuthorizationServerConfig {
-	@Resource
-	private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+    // @formatter:off
+	@Resource private CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
 	@Resource private CustomAuthenticationFailureHandler customAuthenticationFailureHandler;
 	@Resource private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 	@Resource private CustomAccessDeniedHandler customAccessDeniedHandler;
@@ -58,10 +59,20 @@ public class AuthorizationServerConfig {
 	@Resource private AuthorizationProperties authorizationProperties;
 	@Resource private JwtDecoder jwtDecoder;
 	@Resource private JwtAuthenticationConverter jwtAuthenticationConverter;
+	// @formatter:on
 
-	@Bean
-	@Order(Ordered.HIGHEST_PRECEDENCE)
-	public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    /**
+     * {@link OAuth2AuthorizationEndpointConfigurer#configure(HttpSecurity)}
+     *
+     * @param http {@link HttpSecurity}
+     * @return {@link SecurityFilterChain}
+     * @throws Exception ex
+     */
+    @SuppressWarnings("ALL")
+    @Bean
+    @Order(Ordered.HIGHEST_PRECEDENCE)
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+        // @formatter:off
 		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
 		OAuth2AuthorizationServerConfigurer configurer = http.getConfigurer(OAuth2AuthorizationServerConfigurer.class);
 		configurer
@@ -86,7 +97,6 @@ public class AuthorizationServerConfig {
 				//.authorizationConsentService(authorizationConsentService -> {})
 		;
 		
-		// @formatter:off
 		http
 				.sessionManagement(AbstractHttpConfigurer::disable)
 				.exceptionHandling(exceptions ->
@@ -113,23 +123,18 @@ public class AuthorizationServerConfig {
 				// 应用自定义登录处理逻辑
 				.apply(new CustomAuthenticationFilterConfigurer<>()).successHandler(customAuthenticationSuccessHandler).failureHandler(customAuthenticationFailureHandler)
 		;
-		// @formatter:on
 
 		http.build();
 
 		authenticationManager = http.getSharedObject(AuthenticationManager.class);
 
 		return http.getObject();
-	}
-	
-	// @formatter:off
+		// @formatter:on
+    }
 
 
-
-
-
-
-	private Consumer<List<AuthenticationProvider>> configureAuthenticationValidator() {
+    private Consumer<List<AuthenticationProvider>> configureAuthenticationValidator() {
+        // @formatter:off
 		return (authenticationProviders) ->
 				authenticationProviders.forEach((authenticationProvider) -> {
 					if (authenticationProvider instanceof OAuth2AuthorizationCodeRequestAuthenticationProvider) {
@@ -144,10 +149,11 @@ public class AuthorizationServerConfig {
 
 					}
 				});
-	}
+		// @formatter:on
+    }
 
-	static class CustomRedirectUriValidator implements Consumer<OAuth2AuthorizationCodeRequestAuthenticationContext> {
-
+    static class CustomRedirectUriValidator implements Consumer<OAuth2AuthorizationCodeRequestAuthenticationContext> {
+        // @formatter:off
 		@Override
 		public void accept(OAuth2AuthorizationCodeRequestAuthenticationContext authenticationContext) {
 			OAuth2AuthorizationCodeRequestAuthenticationToken authorizationCodeRequestAuthentication =
@@ -163,4 +169,5 @@ public class AuthorizationServerConfig {
 
 		}
 	}
+	// @formatter:on
 }

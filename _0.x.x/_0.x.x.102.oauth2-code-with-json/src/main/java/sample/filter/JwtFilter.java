@@ -1,7 +1,6 @@
 package sample.filter;
 
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.SignatureException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.Order;
@@ -93,12 +92,7 @@ public class JwtFilter extends OncePerRequestFilter {
     
     private Optional<Claims> validateToken(HttpServletRequest req) {
         String jwtToken = req.getHeader(authorizationProperties.getJwt().getHeader()).replace(authorizationProperties.getJwt().getPrefix(), "");
-        try {
-            return Optional.of(Jwts.parserBuilder().setSigningKey(jwtUtil.getKey()).build().parseClaimsJws(jwtToken).getBody());
-        } catch (ExpiredJwtException | SignatureException | MalformedJwtException | UnsupportedJwtException | IllegalArgumentException e) {
-            log.error("Error parsing jwt: {}", e.getLocalizedMessage());
-            return Optional.empty();
-        }
+        return jwtUtil.validateTokenUseDecoder(jwtToken);
     }
     
     private void setupSpringAuthentication(Claims authoritiesClaims, Claims loginTypeClaims) {

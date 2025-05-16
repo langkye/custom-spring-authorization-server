@@ -1,7 +1,6 @@
 package sample.config.provider;
 
 import org.springframework.util.Assert;
-import sample.config.provider.oauth2.CustomOAuth2AuthorizationCodeRequestAuthenticationToken;
 import sample.config.provider.pwd.PasswordAuthenticationToken;
 import sample.config.provider.sms.SmsAuthenticationToken;
 
@@ -51,7 +50,7 @@ public enum AuthType {
     public static AuthType of(Number type) {
         Assert.notNull(type, "loginType must be not null");
         for (AuthType value : AuthType.values()) {
-            if (Objects.equals(value.type, type)) {
+            if (Objects.equals(value.type.longValue(), type.longValue())) {
                 return value;
             }
         }

@@ -4,10 +4,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 import sample.config.provider.ITokenProvider;
 import sample.config.provider.AuthType;
@@ -19,7 +16,6 @@ import sample.property.AuthorizationProperties;
 import sample.util.JwtUtil;
 
 import javax.annotation.Resource;
-import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -59,36 +55,21 @@ public class LoginServiceImpl implements ILoginService {
     private Token creatToken(Authentication authentication) {
         Token token = null;
         Object details = authentication.getDetails();
-        String subject = "";
 
         if (details instanceof UserDetails) {
             UserDetails userDetails = (UserDetails) details;
             token = jwtUtil.createToken(userDetails);
-            subject = userDetails.getUsername();
         }
         Object principal = authentication.getPrincipal();
         if (principal instanceof UserDetails) {
             UserDetails userDetails = (UserDetails) principal;
             token = jwtUtil.createToken(userDetails);
-            subject = userDetails.getUsername();
         }
 
         if (Objects.isNull(token)) {
             token = Token.newInstances();
         }
-
-        // 生成JWT
-        JwtClaimsSet claims = JwtClaimsSet.builder()
-                //.issuer("https://auth-server.com") // 签发者需与OAuth2令牌一致
-                .issuer(authorizationProperties.getServer().getIssuer()) // 签发者需与OAuth2令牌一致
-                .subject(subject)
-                //.expiresAt(Instant.now().plusSeconds(3600))
-                .expiresAt(Instant.ofEpochSecond(authorizationProperties.getJwt().getAccessTokenExpireTime()))
-                .build();
-        Jwt encodedJwt = jwtEncoder.encode(JwtEncoderParameters.from(claims));
-
-        String tokenValue = encodedJwt.getTokenValue();
-
+        
         return token;
         //return Token.newInstances().withAccessToken(tokenValue);
     }
