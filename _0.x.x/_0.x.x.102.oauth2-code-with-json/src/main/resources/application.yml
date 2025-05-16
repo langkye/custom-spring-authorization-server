@@ -56,7 +56,8 @@ authorization:
     key: MD0rgsDaSEZcKyQJqIDrKiV62p+ZhRCJvwOfvLIoGUSTkKCKCDgQQs2RQ8K9N4o36WIcf92ALn+yAUHgIJFDzg==
     refresh-key: S1YnkwxhpZsIyGeLkFuuRAGOzy2QsiQkIA/Hqyn39+mzFCK/V/uv/qUnMORRsy2TE1Z8MhYPwBxFYc41PJWf7g==
   server:
-    issuer: https://www.lnkdoc.cn
+    #issuer: "https://www.lnkdoc.cn"
+    issuer: "http://localhost:9001"
     authorization-endpoint: /oauth2/authorize
     oidc-user-info-endpoint: /api/userinfo
     token-endpoint: /oauth2/token
